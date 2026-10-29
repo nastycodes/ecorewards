@@ -1,0 +1,118 @@
+plugins {
+	id 'net.fabricmc.fabric-loom-remap' version "${loom_version}"
+}
+
+base {
+	archivesName = project.archives_base_name
+}
+
+repositories {
+	exclusiveContent {
+		forRepository {
+			maven {
+				name = 'Modrinth'
+				url = 'https://api.modrinth.com/maven'
+			}
+		}
+		filter {
+			includeGroup 'maven.modrinth'
+		}
+	}
+}
+
+loom {
+	// The game logic is server-side; the client source set only holds the optional Mod Menu config screen.
+	splitEnvironmentSourceSets()
+
+	mods {
+		"ecorewards" {
+			sourceSet sourceSets.main
+			sourceSet sourceSets.client
+		}
+	}
+
+	runs {
+		matching { it.name == "clientGameTest" }.configureEach {
+			// EcoBal formats money with the JVM locale: English number format in the test screenshots.
+			vmArgs "-Duser.language=en", "-Duser.country=US"
+		}
+	}
+}
+
+dependencies {
+	minecraft "com.mojang:minecraft:${project.minecraft_version}"
+	mappings loom.officialMojangMappings()
+	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
+	modImplementation "maven.modrinth:ecobal:${project.ecobal_version}"
+	// EcoBal requires the Fabric Permissions API; only needed to run the game in dev and the game tests.
+	modLocalRuntime "maven.modrinth:fabric-permissions-api:${project.permissions_api_version}"
+
+	// Mod Menu is optional: compile against its API, never bundle it.
+	modCompileOnly "maven.modrinth:modmenu:${project.modmenu_version}"
+	// Only for dev runs and the game tests, so the config screen can be opened from the mod list.
+	modLocalRuntime "maven.modrinth:modmenu:${project.modmenu_version}"
+	modLocalRuntime "maven.modrinth:placeholder-api:${project.placeholder_api_version}"
+}
+
+processResources {
+	def version = project.version
+	def slug = project.modrinth_slug
+	inputs.property "version", version
+	inputs.property "slug", slug
+
+	filesMatching("fabric.mod.json") {
+		expand "version": version, "slug": slug
+	}
+}
+
+// Every text exists in English and German: fails the build when the two language files have different keys.
+def checkTranslations = tasks.register('checkTranslations') {
+	def langDir = file("src/main/resources/assets/${project.archives_base_name}/lang")
+	inputs.dir(langDir)
+	doLast {
+		def slurper = new groovy.json.JsonSlurper()
+		def english = slurper.parse(new File(langDir, 'en_us.json')).keySet()
+		def german = slurper.parse(new File(langDir, 'de_de.json')).keySet()
+		def problems = (english - german).collect { "missing in de_de.json: $it" } + (german - english).collect { "missing in en_us.json: $it" }
+		if (!problems.isEmpty()) {
+			throw new GradleException("The language files differ:\n  " + problems.join("\n  "))
+		}
+	}
+}
+
+tasks.named('check') {
+	dependsOn checkTranslations
+}
+
+jar {
+	def archivesName = project.base.archivesName.get()
+
+	from("LICENSE") {
+		rename { "${it}_${archivesName}" }
+	}
+}
+
+tasks.withType(JavaCompile).configureEach {
+	it.options.release = 21
+	it.options.encoding = "UTF-8"
+}
+
+java {
+	withSourcesJar()
+
+	sourceCompatibility = JavaVersion.VERSION_21
+	targetCompatibility = JavaVersion.VERSION_21
+}
+
+fabricApi {
+	// Server game tests: ./gradlew runGameTest (headless server, fails the build when a test fails)
+	// Client game test: ./gradlew runClientGameTest (opens a game window, screenshots go to build/run/clientGameTest/screenshots)
+	configureTests {
+		createSourceSet = true
+		modId = "ecorewards-gametest"
+		enableGameTests = true
+		enableClientGameTests = true
+		eula = false
+	}
+}

@@ -1,0 +1,39 @@
+{
+	"schemaVersion": 1,
+	"id": "ecorewards",
+	"version": "${version}",
+	"name": "EcoRewards",
+	"description": "Pays EcoBal money for mining blocks and killing mobs. A level that rises with progress multiplies the reward; rewards per block/mob, the XP curve and the level multiplier are configurable. Placed and generated blocks (cobblestone generators, pistons, ...) pay nothing.",
+	"authors": [
+		"nasty.codes"
+	],
+	"contact": {
+		"homepage": "https://modrinth.com/mod/${slug}",
+		"sources": "https://github.com/nastycodes/ecorewards",
+		"issues": "https://github.com/nastycodes/ecorewards/issues"
+	},
+	"license": "MIT",
+	"icon": "assets/ecorewards/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"codes.nasty.ecorewards.EcoRewards"
+		],
+		"modmenu": [
+			"codes.nasty.ecorewards.client.config.ModMenuIntegration"
+		]
+	},
+	"mixins": [
+		"ecorewards.mixins.json"
+	],
+	"depends": {
+		"fabricloader": ">=0.20.1",
+		"minecraft": "~1.21.11",
+		"java": ">=21",
+		"fabric-api": "*",
+		"ecobal": "*"
+	},
+	"suggests": {
+		"modmenu": "*"
+	}
+}

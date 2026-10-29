@@ -1,0 +1,15 @@
+{
+	"required": true,
+	"minVersion": "0.8",
+	"package": "codes.nasty.ecorewards.mixin",
+	"compatibilityLevel": "JAVA_21",
+	"mixins": [
+		"BaseSpawnerMixin",
+		"BlockItemMixin",
+		"CommandsMixin",
+		"LevelChunkMixin"
+	],
+	"injectors": {
+		"defaultRequire": 1
+	}
+}

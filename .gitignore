@@ -1,0 +1,41 @@
+# Gradle
+.gradle/
+build/
+out/
+classes/
+remappedSrc/
+
+# Dev runs and game tests (options, logs, worlds, crash reports)
+run/
+
+# IDEs
+*.launch
+.idea/
+*.iml
+*.ipr
+*.iws
+.settings/
+.vscode/
+bin/
+.classpath
+.project
+
+# Local settings
+modrinth/
+local.properties
+.claude/
+
+# Python
+__pycache__/
+*.pyc
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Java
+hs_err_*.log
+replay_*.log
+*.hprof
+*.jfr
